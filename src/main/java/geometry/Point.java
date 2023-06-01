@@ -11,6 +11,10 @@ public class Point {
         this.y = y;
     }
 
+
+    public double distance(Double pointX, double pointY) {
+        return Math.sqrt(Math.pow((x - pointX), 2) + Math.pow((y - pointY), 2));
+    }
     public double distance(Point point) {
             return Math.sqrt(Math.pow((x - point.x), 2) + Math.pow((y - point.y), 2));
     }
@@ -38,7 +42,7 @@ public class Point {
 
     @Override
     public String toString() {
-        return String.format(Locale.US, "{x: %.2f, y: %.2f}", x, y);
+        return String.format(Locale.US, "\n{\"x\": %.2f, \"y\": %.2f}", x, y);
     }
 
 

@@ -6,8 +6,8 @@ import java.util.List;
 
 public class Building {
 
-    private final List<Point> vertices;
-    private final String color;
+    public final List<Point> vertices;
+    public final String color;
 
     public Building(List<Point> vertices, String color) {
         this.vertices = vertices;
@@ -17,8 +17,8 @@ public class Building {
     @Override
     public String toString() {
         return "\n{\n" +
-                "   color: \"" + color + "\",\n" +
-                "   vertexes: \n    " + vertices +
+//                "   color: \"" + color + "\",\n" +
+                "   \"vertexes\": \n    " + vertices +
                 "\n}";
     }
 }

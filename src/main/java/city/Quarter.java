@@ -16,8 +16,8 @@ public class Quarter {
     // parameters (configuration)
     private final double SIZE_MULTIPLIER = 30;
 
-    private final double MIN_WALL_LENGTH = 0.1 * SIZE_MULTIPLIER;
-    private final double MAX_WALL_LENGTH = 1 * SIZE_MULTIPLIER;
+    private final double MIN_WALL_LENGTH = 0.3 * SIZE_MULTIPLIER;
+    private final double MAX_WALL_LENGTH = 0.9 * SIZE_MULTIPLIER;
 
     private final double WALL_LENGTH_RANGE = (MAX_WALL_LENGTH - MIN_WALL_LENGTH) / 2;
     private final double AVG_WALL_LENGTH = MAX_WALL_LENGTH - WALL_LENGTH_RANGE;
@@ -39,7 +39,9 @@ public class Quarter {
     }
 
     public List<Building> fill() {
-        if (colour.equals("square") || colour.equals("park")) {
+        generateVerticalWalls();
+
+        if (colour.equals("square") || colour.equals("park") || verticalWalls.size() < 2) {
             List<Point> vertices = new ArrayList<>();
             for (Segment border : borders) {
                 vertices.add(border.getEndPoint());
@@ -48,12 +50,9 @@ public class Quarter {
             return buildings;
         }
 
-        generateVerticalWalls();
-        if (verticalWalls.size() < 2) {
-            return null;
-        }
         generateHorizontalWalls();
-        return buildings;
+
+        return buildings.stream().filter(building -> !building.vertices.isEmpty()).toList();
     }
 
     private double nextGaussian() {
@@ -158,6 +157,8 @@ public class Quarter {
         vertexes.add(vertex3);
         vertexes.add(vertex4);
 
+        if (vertexes.stream().anyMatch(Objects::isNull)) return;
+
         buildings.add(new Building(vertexes, colour));
     }
 
@@ -183,6 +184,8 @@ public class Quarter {
         vertexes.add(vertex3);
         vertexes.add(vertex4);
         vertexes.add(vertex5);
+
+        if (vertexes.stream().anyMatch(Objects::isNull)) return;
 
         buildings.add(new Building(vertexes, colour));
 
@@ -232,5 +235,17 @@ public class Quarter {
             res |= Arrays.stream(quarter.getBorders()).anyMatch(s -> s.equals(border));
         }
         return res;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "\"borders\": " + Arrays.toString(borders) +
+                ",\n\"colour\": \"" + colour + '\"' +
+                "}\n";
+    }
+
+    public String toStringBorders() {
+        return Arrays.stream(borders).toList().toString();
     }
 }

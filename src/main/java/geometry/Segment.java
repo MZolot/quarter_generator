@@ -1,5 +1,6 @@
 package geometry;
 
+import java.util.List;
 import java.util.Locale;
 
 public class Segment {
@@ -122,8 +123,40 @@ public class Segment {
         y2 = newY;
     }
 
-    public boolean isIntersecting(Segment segment) {
+    public boolean intersects(Segment segment) {
         return getIntersection(segment) != null;
+    }
+
+    public boolean intersects(Segment[] segments) {
+        for (Segment segment : segments) {
+            if (this.intersects(segment)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean intersects(List<Segment> segments) {
+        for (Segment segment : segments) {
+            if (this.intersects(segment)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean intersectsExtended(List<Segment> segments) {
+        for (Segment segment : segments) {
+            if (this.intersects(segment)) {
+                Point intersection = this.getIntersection(segment);
+                if (intersection.equals(this.getStartPoint()) || intersection.equals(this.getEndPoint()) ||
+                        intersection.equals(segment.getStartPoint()) || intersection.equals(segment.getEndPoint())) {
+                    continue;
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     public Point getIntersection(Segment segment) {
@@ -146,6 +179,12 @@ public class Segment {
         return distance1 + distance2 - length() <= 0.05;
     }
 
+    public boolean isOnSegment(Point point) {
+        double distance1 = Math.sqrt(Math.pow((point.x - x1), 2) + Math.pow((point.y - y1), 2));
+        double distance2 = Math.sqrt(Math.pow((x2 - point.x), 2) + Math.pow((y2 - point.y), 2));
+        return distance1 + distance2 - length() <= 0.05;
+    }
+
     public double getDistanceToPoint(Point point) {
         return getDistanceToPoint(point.x, point.y);
     }
@@ -156,13 +195,13 @@ public class Segment {
 
         double distance = Math.max(distance1, distance2);
         Segment perpendicular = this.getPerpendicular(pointX, pointY, distance);
-        if (this.isIntersecting(perpendicular)) {
+        if (this.intersects(perpendicular)) {
             Point intersection = getIntersection(perpendicular);
             return Math.sqrt(Math.pow((pointX - intersection.x), 2) + Math.pow((pointY - intersection.y), 2));
         }
 
         perpendicular = this.getPerpendicular(pointX, pointY, -distance);
-        if (this.isIntersecting(perpendicular)) {
+        if (this.intersects(perpendicular)) {
             Point intersection = getIntersection(perpendicular);
             return Math.sqrt(Math.pow((pointX - intersection.x), 2) + Math.pow((pointY - intersection.y), 2));
         }
@@ -172,9 +211,7 @@ public class Segment {
 
     public double getAngleCos(Segment segment) {
         Segment thisNormalized = this.getTranslation(0, 0);
-        //Segment normalized = segment.getParallel(thisNormalized.getX1(), thisNormalized.getY1());
         Segment normalized = segment.getTranslation(0, 0);
-        Segment sum = new Segment(0, 0, normalized.getX1(), normalized.getY1());
         double k = thisNormalized.getX2() * normalized.getX2() + thisNormalized.getY2() * normalized.getY2();
         return k / (thisNormalized.length() * normalized.length());
     }
@@ -198,6 +235,26 @@ public class Segment {
 
     public boolean isEndPoint(Point point) {
         return (Math.abs(point.x - x2) < 0.001) && (Math.abs(point.y - y2) < 0.001);
+    }
+
+    public void setStartPoint(Point point) {
+        this.x1 = point.x;
+        this.y1 = point.y;
+    }
+
+    public void setStartPoint(double x, double y) {
+        this.x1 = x;
+        this.y1 = y;
+    }
+
+    public void setEndPoint(Point point) {
+        this.x2 = point.x;
+        this.y2 = point.y;
+    }
+
+    public void setEndPoint(double x, double y) {
+        this.x2 = x;
+        this.y2 = y;
     }
 
     public Point getStartPoint() {

@@ -2,6 +2,7 @@ package city;
 
 import geometry.Point;
 import geometry.Polygon;
+import geometry.Randomizer;
 import geometry.Segment;
 
 import java.io.BufferedWriter;
@@ -22,37 +23,42 @@ public class CityGraph {
     private final double MIN_QUARTER_WIDTH = 0.5;
     private final double MIN_ANGLE_COS = 0.5236;
 
-    private final double MIN_EDGE_LENGTH = 0.5 * MULTIPLIER;
+    private final double MIN_EDGE_LENGTH = 1.2 * MULTIPLIER;
     private final double MAX_EDGE_LENGTH = 3 * MULTIPLIER;
     private final double EDGE_LENGTH_RANGE = (MAX_EDGE_LENGTH - MIN_EDGE_LENGTH) / 2;
     private final double AVG_EDGE_LENGTH = MAX_EDGE_LENGTH - EDGE_LENGTH_RANGE;
 
-    private final double SIDE_LENGTH_ERROR_PERCENT = 0.05;
-    private final double BORDER_TILT = 0.1 * MULTIPLIER;
+    private final double SIDE_LENGTH_ERROR_PERCENT = 0.07 / 2;
+    private final double BORDER_TILT_PERCENT = 0.05 * MULTIPLIER;
 
 
     public CityGraph() {
     }
 
     public void generateCity(double startX, double startY, double length, double[][] shapeMultipliers, Map<String, Double> coloringConfig) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter("buildings.txt"));
+        BufferedWriter buildingsWriter = new BufferedWriter(new FileWriter("src/main/resources/buildings.json", false));
 
         generateCityGraph(startX, startY, length, shapeMultipliers);
+
         List<Quarter> quarters = cityPolygon.getQuarters();
+
+//        BufferedWriter quartersWriter = new BufferedWriter(new FileWriter("src/main/resources/quarters.json"));
+//        quartersWriter.write(quarters.toString().replace("start", "\"start\"").replace("end","\"end\""));
+//        quartersWriter.flush();
+
+//        List<Quarter> quarters = JSONReader.readQuarters("src/main/resources/quarters.json");
+
         colorQuarters(quarters, coloringConfig);
 
         List<Building> allBuildings = new ArrayList<>();
         for (Quarter quarter : quarters) {
-            //List<Building> buildings = quarter.fill();
-            //System.out.println(buildings);
-            //writer.append(buildings.toString());
             List<Building> buildings = quarter.fill();
             if (buildings != null) {
                 allBuildings.addAll(buildings);
             }
         }
-        writer.write(allBuildings.toString());
-        writer.flush();
+        buildingsWriter.write(allBuildings.toString());
+        buildingsWriter.flush();
     }
 
     private void colorQuarters(List<Quarter> quarters, Map<String, Double> coloringConfig) {
@@ -67,10 +73,12 @@ public class CityGraph {
             int amount = (int) Math.round(coloringConfig.get(type) * number);
             if (n + amount > number) {
                 typeAmounts.put(type, number - n);
+                n = number;
                 continue;
             }
             if (n >= number) {
                 typeAmounts.put(type, 0);
+                continue;
             }
             typeAmounts.put(type, amount);
             n += amount;
@@ -81,7 +89,7 @@ public class CityGraph {
             typeAmounts.put(randomType, typeAmounts.get(randomType) + (number - n));
         }
 
-        System.out.println(typeAmounts.keySet());
+//        System.out.println(typeAmounts.keySet());
 
         List<Quarter> uncolored = new ArrayList<>(quarters);
         for (String type : special) {
@@ -109,31 +117,33 @@ public class CityGraph {
             }
         }
 
-        System.out.println(quarters);
+//        System.out.println(quarters);
     }
 
     public void generateCityGraph(double startX, double startY, double length, double[][] shapeMultipliers) throws IOException {
         borders = generateShapedBorders(startX, startY, length, shapeMultipliers);
-        vertices = new ArrayList<>();
-        for (Segment border : borders) {
-            vertices.add(new Point(border.getX1(), border.getY1()));
-        }
-        cityPolygon = new Polygon(vertices);
+        //cityPolygon = new Polygon(vertices);
+        cityPolygon = new Polygon(borders);
+
+//        vertices = new ArrayList<>();
+//        for (Segment border : borders) {
+//            vertices.add(new Point(border.getX1(), border.getY1()));
+//        }
+
+
+        BufferedWriter bordersWriter = new BufferedWriter(new FileWriter("src/main/resources/borders.txt"));
+        bordersWriter.write(borders.toString());
+        bordersWriter.flush();
+
+//        BufferedWriter verticesWriter = new BufferedWriter(new FileWriter("src/main/resources/vertex.txt"));
+//        verticesWriter.write(vertices.toString());
+//        verticesWriter.flush();
+
         List<Segment> edges = cityPolygon.fill();
 
-        BufferedWriter writer = new BufferedWriter(new FileWriter("graph.txt"));
+        BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/resources/graph.txt"));
         writer.write(edges.toString());
         writer.flush();
-
-        System.out.println(edges);
-
-        System.out.println("\n\n");
-
-        vertices = new ArrayList<>();
-        for (Segment edge : edges) {
-            vertices.add(edge.getEndPoint());
-        }
-        //System.out.println(borders);
     }
 
     private List<Segment> generateShapedBorders(double startX, double startY, double length, double[][] shapeMultipliers) {
@@ -149,24 +159,25 @@ public class CityGraph {
             y = segments.get(segments.size() - 1).getY2();
             borderSegments.addAll(segments);
         }
+
         List<Segment> segments = generateStraightSideSegments(x, y, shapeMultipliers[multipliersNumber - 1][0],
-                shapeMultipliers[multipliersNumber - 1][1], length, startX, startY);
+                shapeMultipliers[multipliersNumber - 1][1], startX, startY);
         borderSegments.addAll(segments);
 
         return borderSegments;
     }
 
-    private List<Segment> generateStraightSideSegments(double startX, double startY, double XMultiplier, double YMultiplier, double sideLength) {
-        double xOffset = nextGaussian() * sideLength * SIDE_LENGTH_ERROR_PERCENT;
-        double endX = startX + (XMultiplier * sideLength) + xOffset;
-        double yOffset = nextGaussian() * sideLength * SIDE_LENGTH_ERROR_PERCENT;
-        double endY = startY + (YMultiplier * sideLength) + yOffset;
+    private List<Segment> generateStraightSideSegments(double startX, double startY, double xMultiplier, double yMultiplier, double sideLength) {
+        double xOffset = Randomizer.nextGaussian() * sideLength * SIDE_LENGTH_ERROR_PERCENT;
+        double endX = startX + (xMultiplier * sideLength) + xOffset;
+        double yOffset = Randomizer.nextGaussian() * sideLength * SIDE_LENGTH_ERROR_PERCENT;
+        double endY = startY + (yMultiplier * sideLength) + yOffset;
         //System.out.println((new Segment(startX, startY, endX, endY)));
 
-        return generateStraightSideSegments(startX, startY, XMultiplier, YMultiplier, sideLength, endX, endY);
+        return generateStraightSideSegments(startX, startY, xMultiplier, yMultiplier, endX, endY);
     }
 
-    private List<Segment> generateStraightSideSegments(double startX, double startY, double XMultiplier, double YMultiplier, double sideLength, double endX, double endY) {
+    private List<Segment> generateStraightSideSegments(double startX, double startY, double xMultiplier, double yMultiplier, double endX, double endY) {
         List<Segment> segments = new ArrayList<>();
         double length = 0;
         double x = startX;
@@ -175,55 +186,46 @@ public class CityGraph {
         double newX;
         double newY;
 
-        double minSideLength = sideLength * (1 - SIDE_LENGTH_ERROR_PERCENT);
-        double maxSideLength = sideLength * (1 + SIDE_LENGTH_ERROR_PERCENT);
+        double sideLength = (new Point(startX, startY)).distance(endX, endY);
 
-        while (length <= minSideLength) {
-            double xDeviation = nextGaussian() * EDGE_LENGTH_RANGE;
-            double xLength = XMultiplier * (AVG_EDGE_LENGTH + xDeviation);
-            newX = x + xLength + nextGaussian() * BORDER_TILT;
+        while (true) {
+            double xLengthDeviation = Randomizer.nextGaussian() * EDGE_LENGTH_RANGE;
+            double xLength = xMultiplier * (AVG_EDGE_LENGTH + xLengthDeviation);
+            double xDeviation = Randomizer.nextGaussian() * BORDER_TILT_PERCENT * yMultiplier;
+            newX = x + xLength + xDeviation;
 
-            double yDeviation = nextGaussian() * EDGE_LENGTH_RANGE;
-            double yLength = YMultiplier * (AVG_EDGE_LENGTH + yDeviation);
-            newY = y + yLength + nextGaussian() * BORDER_TILT;
+            double yLengthDeviation = Randomizer.nextGaussian() * EDGE_LENGTH_RANGE;
+            double yLength = yMultiplier * (AVG_EDGE_LENGTH + yLengthDeviation);
+            double yDeviation = Randomizer.nextGaussian() * BORDER_TILT_PERCENT * xMultiplier;
+            newY = y + yLength + yDeviation;
+            //newY = y + yMultiplier * (AVG_EDGE_LENGTH + Randomizer.nextGaussian() * EDGE_LENGTH_RANGE) + Randomizer.nextGaussian() * BORDER_TILT_PERCENT * MULTIPLIER;
 
             Segment segment = new Segment(x, y, newX, newY);
-            double lengthLeft = sideLength - length - segment.length();
+            double s = segment.length();
+            length += s;
+            double lengthLeft = sideLength - length;
 
-            length += segment.length();
-
-            if (length >= minSideLength && (lengthLeft > 0 && lengthLeft < MIN_EDGE_LENGTH)) {
-                if (segment.length() + lengthLeft <= MAX_EDGE_LENGTH) {
-                    newX = endX;
-                    newY = endY;
+            if (lengthLeft < MIN_EDGE_LENGTH) {
+                if ((lengthLeft >= 0 && segment.length() + lengthLeft <= MAX_EDGE_LENGTH) ||
+                        (lengthLeft < 0 && segment.length() + lengthLeft >= MIN_EDGE_LENGTH) ||
+                        (new Point(x, y).distance(endX, endY) >= MIN_EDGE_LENGTH)) {
                     segment = new Segment(x, y, endX, endY);
-                } else {
-                    newX = x + (XMultiplier * (lengthLeft / 2) + (XMultiplier * 0.5 * nextGaussian()));
-                    newY = y + (YMultiplier * (lengthLeft / 2) + (YMultiplier * 0.5 * nextGaussian()));
+                    segments.add(segment);
+                    break;
+                } else if (lengthLeft > 0){
+                    newX = x + (xMultiplier * (lengthLeft + segment.length() / 2) + (xMultiplier * 0.5 * Randomizer.nextGaussian()));
+                    newY = y + (yMultiplier * (lengthLeft + segment.length() / 2) + (yMultiplier * 0.5 * Randomizer.nextGaussian()));
                     segment = new Segment(x, y, newX, newY);
+                } else {
+                    System.out.println("AAAAAAAAAAAAAAA");
                 }
-            }
-
-            if (length > maxSideLength) {
-                newX = endX;
-                newY = endY;
-                segment = new Segment(x, y, endX, endY);
             }
 
             segments.add(segment);
             x = newX;
             y = newY;
         }
-
         return segments;
-    }
-
-    private double nextGaussian() {
-        Random random = new Random();
-        double nextGaussian = random.nextGaussian();
-        if (Math.abs(nextGaussian) <= 1) {
-            return nextGaussian;
-        } else return nextGaussian * 0.5;
     }
 
     private List<Segment> findPreviousEdges(Point vertex) {
@@ -235,8 +237,7 @@ public class CityGraph {
     }
 
     private void generateQuarters() {
-        List<Point> uncheckedVertices = new ArrayList<>();
-        uncheckedVertices.addAll(vertices);
+        List<Point> uncheckedVertices = new ArrayList<>(vertices);
         for (Point vertex : uncheckedVertices) {
             Point firstVertex = (findNextEdges(vertex) == null || findNextEdges(vertex).size() == 0) ?
                     vertex : findNextEdges(vertex).get(0).getEndPoint();
@@ -246,15 +247,15 @@ public class CityGraph {
 
     public static void main(String[] args) throws IOException {
         CityGraph cityGraph = new CityGraph();
-        double[][] rectangleMultipliers = {{1.0, 0.0}, {0.0, 1.0}, {-1.0, 0.0}, {0.0, -1.0}};
-        double[][] rhombusMultipliers = {{0.45, -0.9}, {0.45, 0.9}, {-0.45, 0.9}, {-0.45, -0.9}};
+        double[][] sqareMultipliers = {{1.0, 0.0}, {0.0, 1.0}, {-1.0, 0.0}, {0.0, -1.0}};
+        double[][] rhombusMultipliers = {{-0.45, -0.9}, {0.45, -0.9}, {0.45, 0.9}, {-0.45, 0.9}};
         double[][] crossMultipliers = {
-                {1.0, 0.0}, {0.0, 1.0},
-                {1.0, 0.0}, {0.0, 1.0},
-                {-1.0, 0.0}, {0.0, 1.0},
-                {-1.0, 0.0}, {0.0, -1.0},
-                {-1.0, 0.0}, {0.0, -1.0},
-                {1.0, 0}, {0.0, -1.0}};
+                {0.0, -1.0}, {-1.0, 0.0},
+                {0.0, -1.0}, {1.0, 0},
+                {0.0, -1.0}, {1.0, 0.0},
+                {0.0, 1.0}, {1.0, 0.0},
+                {0.0, 1.0}, {-1.0, 0.0},
+                {0.0, 1.0}, {-1.0, 0.0}};
 
         Map<String, Double> coloringConfig = new HashMap<>();
         coloringConfig.put("park", 0.15);
@@ -265,7 +266,7 @@ public class CityGraph {
         coloringConfig.put("square", 0.1);
         coloringConfig.put("rich", 0.05);
 
-        cityGraph.generateCity(80, 80, 300, rectangleMultipliers, coloringConfig);
+        cityGraph.generateCity(80, 80, 300, sqareMultipliers, coloringConfig);
     }
 
 }

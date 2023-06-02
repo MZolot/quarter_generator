@@ -21,4 +21,9 @@ public class Randomizer {
     public static double randomFromMinMax(double min, double max) {
         return min + Math.random() * (max - min);
     }
+
+
+    public static double randomFromAverageWithMinMax(double average, double range, double min, double max) {
+        return Math.min(Math.max(average + nextGaussian() * range, min), max);
+    }
 }

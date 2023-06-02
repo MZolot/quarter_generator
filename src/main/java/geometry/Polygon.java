@@ -3,6 +3,9 @@ package geometry;
 import city.Quarter;
 import json.JSONReader;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -268,9 +271,13 @@ public class Polygon {
         //verticalEdges = JSONReader.readSegments("src/main/resources/i.json");
 
         List<Segment> horizontalEdges = new ArrayList<>(edges);
+        List<Segment> innerPolygon = new ArrayList<>(edges);
 
         while (verticalEdges.size() > 1 && verticalEdges.stream().anyMatch(segment -> segment.length() > 0)) {
             horizontalEdges = generateHorizontalEdges(verticalEdges, horizontalEdges);
+            if (!horizontalEdges.isEmpty()) {
+                innerPolygon = new ArrayList<>(horizontalEdges);
+            }
             innerEdges.addAll(verticalEdges);
             innerEdges.addAll(horizontalEdges);
 
@@ -280,6 +287,7 @@ public class Polygon {
             verticalEdges = generateVerticalEdges(horizontalEdges, maxLengthMultiplier, minLengthMultiplier);
         }
         innerEdges.addAll(verticalEdges);
+        quarters.add(new Quarter(innerPolygon));
 
         return innerEdges;
     }

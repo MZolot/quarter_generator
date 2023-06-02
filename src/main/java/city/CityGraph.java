@@ -4,6 +4,7 @@ import geometry.Point;
 import geometry.Polygon;
 import geometry.Randomizer;
 import geometry.Segment;
+import json.JSONReader;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -19,9 +20,6 @@ public class CityGraph {
 
     // parameters (configuration)
     private final double MULTIPLIER = 60;
-
-    private final double MIN_QUARTER_WIDTH = 0.5;
-    private final double MIN_ANGLE_COS = 0.5236;
 
     private final double MIN_EDGE_LENGTH = 1.2 * MULTIPLIER;
     private final double MAX_EDGE_LENGTH = 3 * MULTIPLIER;
@@ -54,7 +52,7 @@ public class CityGraph {
         for (Quarter quarter : quarters) {
             List<Building> buildings = quarter.fill();
             if (buildings != null) {
-                allBuildings.addAll(buildings);
+                allBuildings.addAll(buildings.stream().filter(b -> !b.vertices.isEmpty()).toList());
             }
         }
         buildingsWriter.write(allBuildings.toString());
@@ -212,7 +210,7 @@ public class CityGraph {
                     segment = new Segment(x, y, endX, endY);
                     segments.add(segment);
                     break;
-                } else if (lengthLeft > 0){
+                } else if (lengthLeft > 0) {
                     newX = x + (xMultiplier * (lengthLeft + segment.length() / 2) + (xMultiplier * 0.5 * Randomizer.nextGaussian()));
                     newY = y + (yMultiplier * (lengthLeft + segment.length() / 2) + (yMultiplier * 0.5 * Randomizer.nextGaussian()));
                     segment = new Segment(x, y, newX, newY);

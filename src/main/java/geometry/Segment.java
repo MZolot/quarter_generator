@@ -1,5 +1,6 @@
 package geometry;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -157,6 +158,10 @@ public class Segment {
             }
         }
         return false;
+    }
+
+    public boolean intersectsExtended(Segment[] segments) {
+        return this.intersectsExtended(Arrays.stream(segments).toList());
     }
 
     public Point getIntersection(Segment segment) {

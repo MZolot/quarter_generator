@@ -6,12 +6,10 @@ import java.util.Locale;
 
 public class Segment {
 
-    private final double DEFAULT_TILT_PERCENT = 0.3;
-
-    private double x1;
-    private double y1;
-    private double x2;
-    private double y2;
+    private final double x1;
+    private final double y1;
+    private final double x2;
+    private final double y2;
 
     public Segment(double x1, double y1, double x2, double y2) {
         this.x1 = x1;
@@ -31,11 +29,6 @@ public class Segment {
         return Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
     }
 
-    public void setLength(double length) {
-        x2 = x1 + (x2 - x1) / this.length() * length;
-        y2 = y1 + (y2 - y1) / this.length() * length;
-    }
-
     public Segment getPerpendicular(double x, double y) {
         double newX = x - (y2 - y1) / this.length();
         double newY = y + (x2 - x1) / this.length();
@@ -49,7 +42,7 @@ public class Segment {
     }
 
     public Segment getTiltedPerpendicular(double x, double y, double length) {
-        return getTiltedPerpendicular(x, y, length, DEFAULT_TILT_PERCENT, DEFAULT_TILT_PERCENT);
+        return getTiltedPerpendicular(x, y, length, 0.3, 0.3);
     }
 
     public Segment getTiltedPerpendicular(double x, double y, double length, double yTiltPercent, double xTiltPercent) {
@@ -81,7 +74,7 @@ public class Segment {
     }
 
     public Segment getTiltedParallel(double x, double y, double length) {
-        return getTiltedParallel(x, y, length, DEFAULT_TILT_PERCENT, DEFAULT_TILT_PERCENT);
+        return getTiltedParallel(x, y, length, 0.3, 0.3);
     }
 
     public Segment getTiltedParallel(double x, double y, double length, double yTiltPercent, double xTiltPercent) {
@@ -102,26 +95,8 @@ public class Segment {
         return new Segment(x2, y2, x1, y1);
     }
 
-    public void reverse() {
-        double x = x1;
-        double y = y1;
-        x1 = x2;
-        y1 = y2;
-        x2 = x;
-        y2 = y;
-    }
-
     public Segment getTurnedAround() {
         return getParallel(x1, y1, -this.length());
-    }
-
-    public void translate(double x, double y) {
-        double newX = x2 - (x1 - x);
-        double newY = y2 - (y1 - y);
-        x1 = x;
-        y1 = y;
-        x2 = newX;
-        y2 = newY;
     }
 
     public boolean intersects(Segment segment) {
@@ -152,11 +127,8 @@ public class Segment {
                 return false;
             }
             Point intersection = this.getIntersection(segment);
-            if (intersection.equals(this.getStartPoint()) || intersection.equals(this.getEndPoint()) ||
-                    intersection.equals(segment.getStartPoint()) || intersection.equals(segment.getEndPoint())) {
-                return false;
-            }
-            return true;
+            return !intersection.equals(this.getStartPoint()) && !intersection.equals(this.getEndPoint()) &&
+                    !intersection.equals(segment.getStartPoint()) && !intersection.equals(segment.getEndPoint());
         }
         return false;
     }
@@ -179,28 +151,9 @@ public class Segment {
         return this.intersectsExtended(Arrays.stream(segments).toList());
     }
 
-//    public Segment getIntersectedSegment(List<Segment> segments) {
-//        for (Segment segment : segments) {
-//            if (this.intersects(segment)) {
-//                if (this.equals(segment) ||
-//                        this.equals(segment.getParallel(segment.x1, segment.y1, this.length())) ||
-//                        segment.equals(this.getParallel(this.x1, this.y1, segment.length()))) {
-//                    continue;
-//                }
-//                return segment;
-//            }
-//        }
-//        return null;
-//    }
-
     public Segment getIntersectedExtendedSegment(List<Segment> segments) {
         for (Segment segment : segments) {
             if (this.intersectsExtended(segment)) {
-//                Point intersection = this.getIntersection(segment);
-//                if (intersection.equals(this.getStartPoint()) || intersection.equals(this.getEndPoint()) ||
-//                        intersection.equals(segment.getStartPoint()) || intersection.equals(segment.getEndPoint())) {
-//                    continue;
-//                }
                 return segment;
             }
         }
@@ -289,26 +242,6 @@ public class Segment {
         return (Math.abs(point.x - x2) < 0.001) && (Math.abs(point.y - y2) < 0.001);
     }
 
-    public void setStartPoint(Point point) {
-        this.x1 = point.x;
-        this.y1 = point.y;
-    }
-
-    public void setStartPoint(double x, double y) {
-        this.x1 = x;
-        this.y1 = y;
-    }
-
-    public void setEndPoint(Point point) {
-        this.x2 = point.x;
-        this.y2 = point.y;
-    }
-
-    public void setEndPoint(double x, double y) {
-        this.x2 = x;
-        this.y2 = y;
-    }
-
     public Point getStartPoint() {
         return new Point(x1, y1);
     }
@@ -326,39 +259,22 @@ public class Segment {
         return x1;
     }
 
-    public void setX1(double x1) {
-        this.x1 = x1;
-    }
-
     public double getY1() {
         return y1;
-    }
-
-    public void setY1(double y1) {
-        this.y1 = y1;
     }
 
     public double getX2() {
         return x2;
     }
 
-    public void setX2(double x2) {
-        this.x2 = x2;
-    }
-
     public double getY2() {
         return y2;
-    }
-
-    public void setY2(double y2) {
-        this.y2 = y2;
     }
 
 //    @Override
 //    public String toString() {
 //        return String.format("Segment{(%.2f, %.2f), (%.2f, %.2f)}", x1, y1, x2, y2);
 //    }
-
 
     public boolean equals(Segment segment) {
         return Math.abs(this.x1 - segment.x1) < 0.1 &&

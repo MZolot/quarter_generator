@@ -121,11 +121,6 @@ public class Quarter {
                     int k = (size + i - 1) % size;
                     List<Segment> previousBorderWalls = verticalWalls.get(k);
                     if (k == i) return;
-//                    while (previousBorderWalls.size() == 0) { //такого вроде не должно быть, но нужно добавить проверку, что не попали на ту же сторону
-//                        k--;
-//                        if (k < 0) break;
-//                        previousBorderWalls = verticalWalls.get(k);
-//                    }
                     previousWall = previousBorderWalls.get(previousBorderWalls.size() - 1);
                     generateCornerBuilding(wall, previousWall);
                 } else if (j == borderWalls.size() - 1) {
@@ -156,7 +151,6 @@ public class Quarter {
         }
 
         Point vertex2 = previousWall.getPointOnSegment(Math.random() * (MAX_BORDER_WALL_OFFSET));
-        //double length = AVG_WALL_LENGTH + nextGaussian() * WALL_LENGTH_RANGE;
         Segment offset = previousWall.getPerpendicular(vertex2.x, vertex2.y, -MAX_LENGTH);
         Point vertex4 = wall.getPointOnSegment(Math.random() * MAX_BORDER_WALL_OFFSET);
         Segment offsetPrevious = wall.getPerpendicular(vertex4.x, vertex4.y, MAX_LENGTH);
@@ -167,9 +161,7 @@ public class Quarter {
         vertexes.add(vertex3);
         vertexes.add(vertex4);
 
-        if (vertexes.stream().anyMatch(Objects::isNull)) {
-            return;
-        }
+        vertexes = vertexes.stream().filter(v -> !v.isNan()).toList();
 
         buildings.add(new Building(vertexes, colour));
         outerVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex1));
@@ -191,12 +183,6 @@ public class Quarter {
         double width = vertex3.distance(vertex4);
         double wallLength = Randomizer.randomAverageMinMax(width, width * WALL_TO_WALL_RANGE, MIN_WALL_LENGTH, MAX_WALL_LENGTH);
 
-//        lengthWall = wall.getParallel(wall.getX1(), wall.getY1(), wallLength);
-//        Point vertex1 = new Point(lengthWall.getX2(), lengthWall.getY2());
-//
-//        lengthWall = previousWall.getParallel(previousWall.getX1(), previousWall.getY1(), wallLength);
-//        Point vertex2 = new Point(lengthWall.getX2(), lengthWall.getY2());
-
         List<Point> vertexes = new ArrayList<>();
         Point vertex1;
         Point vertex2;
@@ -212,15 +198,6 @@ public class Quarter {
             lengthWall = wall.getParallel(wall.getX1(), wall.getY1(), length);
             Point vertex5 = lengthWall.getEndPoint();
             vertexes.add(vertex5);
-
-//            Point vertex5 = lengthWall.getIntersection(intersectedWall);
-//            vertexes.add(vertex5);
-//
-//            vertex2 = intersectedWall.getEndPoint();
-//            double length = perpendicular.getDistanceToPoint(vertex2);
-//            lengthWall = wall.getParallel(wall.getX1(), wall.getY1(), length);
-//            vertex1 = lengthWall.getEndPoint();
-
         } else {
             vertex2 = new Point(lengthWall.getX2(), lengthWall.getY2());
             vertex1 = wall.getParallel(wall.getX1(), wall.getY1(), wallLength).getEndPoint();
@@ -231,9 +208,7 @@ public class Quarter {
         vertexes.add(vertex3);
         vertexes.add(vertex4);
 
-        if (vertexes.stream().anyMatch(Objects::isNull)) {
-            return;
-        }
+        vertexes = vertexes.stream().filter(v -> !v.isNan()).toList();
 
         buildings.add(new Building(vertexes, colour));
         outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
@@ -267,9 +242,7 @@ public class Quarter {
         vertexes.add(vertex4);
         vertexes.add(vertex5);
 
-        if (vertexes.stream().anyMatch(Objects::isNull)) {
-            return;
-        }
+        vertexes = vertexes.stream().filter(v -> !v.isNan()).toList();
 
         buildings.add(new Building(vertexes, colour));
         outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
@@ -305,15 +278,6 @@ public class Quarter {
             lengthWall = wall.getParallel(wall.getX1(), wall.getY1(), length);
             Point vertex5 = lengthWall.getEndPoint();
             vertexes.add(vertex5);
-
-//            Point vertex5 = lengthWall.getIntersection(intersectedWall);
-//            vertexes.add(vertex5);
-//
-//            vertex2 = intersectedWall.getEndPoint();
-//            double length = perpendicular.getDistanceToPoint(vertex2);
-//            lengthWall = wall.getParallel(wall.getX1(), wall.getY1(), length);
-//            vertex1 = lengthWall.getEndPoint();
-
         } else {
             vertex2 = new Point(lengthWall.getX2(), lengthWall.getY2());
             perpendicular = previousWall.getPerpendicular(lengthWall.getX2(), lengthWall.getY2(), -MAX_LENGTH);
@@ -325,9 +289,7 @@ public class Quarter {
         vertexes.add(vertex3);
         vertexes.add(vertex4);
 
-        if (vertexes.stream().anyMatch(Objects::isNull)) {
-            return;
-        }
+        vertexes = vertexes.stream().filter(v -> !v.isNan()).toList();
 
         buildings.add(new Building(vertexes, colour));
         outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
@@ -360,9 +322,5 @@ public class Quarter {
                 "\"borders\": " + Arrays.toString(borders) +
                 ",\n\"colour\": \"" + colour + '\"' +
                 "}\n";
-    }
-
-    public String toStringBorders() {
-        return Arrays.stream(borders).toList().toString();
     }
 }

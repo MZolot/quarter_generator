@@ -12,13 +12,14 @@ public class Quarter {
     private String colour = "poor";
 
     private final List<List<Segment>> verticalWalls;
+    private final List<Segment> outerVerticalWalls;
     private final List<Building> buildings;
 
     // parameters (configuration)
     private final double SIZE_MULTIPLIER = 30;
 
-    private final double MIN_WALL_LENGTH = 0.3 * SIZE_MULTIPLIER;
-    private final double MAX_WALL_LENGTH = 0.7 * SIZE_MULTIPLIER;
+    private final double MIN_WALL_LENGTH = 0.4 * SIZE_MULTIPLIER;
+    private final double MAX_WALL_LENGTH = 0.75 * SIZE_MULTIPLIER;
     private final double WALL_LENGTH_RANGE = (MAX_WALL_LENGTH - MIN_WALL_LENGTH) / 2;
     private final double AVG_WALL_LENGTH = MAX_WALL_LENGTH - WALL_LENGTH_RANGE;
     private final double WALL_TO_WALL_RANGE = 0.55;
@@ -30,12 +31,14 @@ public class Quarter {
     public Quarter(Segment[] borders) {
         this.borders = borders;
         verticalWalls = new ArrayList<>();
+        outerVerticalWalls = new ArrayList<>();
         buildings = new ArrayList<>();
     }
 
     public Quarter(List<Segment> borders) {
         this.borders = borders.toArray(new Segment[0]);
         verticalWalls = new ArrayList<>();
+        outerVerticalWalls = new ArrayList<>();
         buildings = new ArrayList<>();
     }
 
@@ -78,7 +81,7 @@ public class Quarter {
 
             while (true) {
                 //double length = MIN_WALL_LENGTH + nextGaussian() * (MAX_WALL_LENGTH - MIN_WALL_LENGTH);{
-                double length = Randomizer.randomFromAverage(AVG_WALL_LENGTH, WALL_LENGTH_RANGE);
+                double length = Randomizer.randomAverage(AVG_WALL_LENGTH, WALL_LENGTH_RANGE);
                 Segment lengthSegment = edge.getParallel(x, y, length);
                 x = lengthSegment.getX2();
                 y = lengthSegment.getY2();
@@ -142,13 +145,13 @@ public class Quarter {
 
         Point vertex1 = wall.getIntersection(previousWall);
         if (vertex1 == null) {
-            generateCornerNotRectangular(wall, previousWall); //тут чуть другой алгоритм нужен
+            generateCornerNotRectangular(wall, previousWall);
             return;
         }
         Segment lengthWall1 = new Segment(wall.getX1(), wall.getY1(), vertex1.x, vertex1.y);
         Segment lengthWall2 = new Segment(previousWall.getX1(), previousWall.getY1(), vertex1.x, vertex1.y);
         if (lengthWall1.length() > MAX_WALL_LENGTH || lengthWall2.length() > MAX_WALL_LENGTH) {
-            generateCornerPentagon(wall, previousWall);
+            generateCornerPentagon(wall, previousWall, lengthWall1.length(), lengthWall2.length());
             return;
         }
 
@@ -164,9 +167,13 @@ public class Quarter {
         vertexes.add(vertex3);
         vertexes.add(vertex4);
 
-        if (vertexes.stream().anyMatch(Objects::isNull)) return;
+        if (vertexes.stream().anyMatch(Objects::isNull)) {
+            return;
+        }
 
         buildings.add(new Building(vertexes, colour));
+        outerVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex1));
+        outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
     }
 
     private void generateCornerNotRectangular(Segment wall, Segment previousWall) {
@@ -180,37 +187,72 @@ public class Quarter {
         lengthWall = previousWall.getParallel(previousWall.getX1(), previousWall.getY1(), offset);
         Point vertex3 = new Point(lengthWall.getX2(), lengthWall.getY2());
 
+        Segment offsetWall = new Segment(vertex3, vertex4);
         double width = vertex3.distance(vertex4);
-        double wallLength = Randomizer.randomFromAverageWithMinMax(width, width * WALL_TO_WALL_RANGE, MIN_WALL_LENGTH, MAX_WALL_LENGTH);
+        double wallLength = Randomizer.randomAverageMinMax(width, width * WALL_TO_WALL_RANGE, MIN_WALL_LENGTH, MAX_WALL_LENGTH);
 
-        lengthWall = wall.getParallel(wall.getX1(), wall.getY1(), wallLength);
-        Point vertex1 = new Point(lengthWall.getX2(), lengthWall.getY2());
-
-        lengthWall = previousWall.getParallel(previousWall.getX1(), previousWall.getY1(), wallLength);
-        Point vertex2 = new Point(lengthWall.getX2(), lengthWall.getY2());
-
+//        lengthWall = wall.getParallel(wall.getX1(), wall.getY1(), wallLength);
+//        Point vertex1 = new Point(lengthWall.getX2(), lengthWall.getY2());
+//
+//        lengthWall = previousWall.getParallel(previousWall.getX1(), previousWall.getY1(), wallLength);
+//        Point vertex2 = new Point(lengthWall.getX2(), lengthWall.getY2());
 
         List<Point> vertexes = new ArrayList<>();
+        Point vertex1;
+        Point vertex2;
+
+        lengthWall = previousWall.getParallel(previousWall.getX1(), previousWall.getY1(), wallLength);
+
+        Segment intersectedWall = lengthWall.getIntersectedExtendedSegment(outerVerticalWalls);
+        if (intersectedWall != null && !Double.isNaN(lengthWall.getIntersection(intersectedWall).x)) {
+            vertex2 = lengthWall.getIntersection(intersectedWall);
+
+            vertex1 = intersectedWall.getEndPoint();
+            double length = offsetWall.getDistanceToPoint(vertex1);
+            lengthWall = wall.getParallel(wall.getX1(), wall.getY1(), length);
+            Point vertex5 = lengthWall.getEndPoint();
+            vertexes.add(vertex5);
+
+//            Point vertex5 = lengthWall.getIntersection(intersectedWall);
+//            vertexes.add(vertex5);
+//
+//            vertex2 = intersectedWall.getEndPoint();
+//            double length = perpendicular.getDistanceToPoint(vertex2);
+//            lengthWall = wall.getParallel(wall.getX1(), wall.getY1(), length);
+//            vertex1 = lengthWall.getEndPoint();
+
+        } else {
+            vertex2 = new Point(lengthWall.getX2(), lengthWall.getY2());
+            vertex1 = wall.getParallel(wall.getX1(), wall.getY1(), wallLength).getEndPoint();
+        }
 
         vertexes.add(vertex1);
         vertexes.add(vertex2);
         vertexes.add(vertex3);
         vertexes.add(vertex4);
 
-        if (vertexes.stream().anyMatch(Objects::isNull)) return;
+        if (vertexes.stream().anyMatch(Objects::isNull)) {
+            return;
+        }
 
         buildings.add(new Building(vertexes, colour));
+        outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
+        outerVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex2));
     }
 
-    private void generateCornerPentagon(Segment wall, Segment previousWall) {
+    private void generateCornerPentagon(Segment wall, Segment previousWall, double lengthToIntersection1, double lengthToIntersection2) {
         List<Point> vertexes = new ArrayList<>();
 
 //        double maxLength = WALL_LENGTH_RANGE * 0.75;
 
-        Segment lengthWall1 = wall.getParallel(wall.getX1(), wall.getY1(), Randomizer.randomFromAverage(AVG_WALL_LENGTH, WALL_LENGTH_RANGE));
+        double length1 = Randomizer.randomAverageMinMax(AVG_WALL_LENGTH, WALL_LENGTH_RANGE, MIN_WALL_LENGTH,
+                Math.min(MAX_WALL_LENGTH, lengthToIntersection1));
+        Segment lengthWall1 = wall.getParallel(wall.getX1(), wall.getY1(), length1);
         Point vertex1 = new Point(lengthWall1.getX2(), lengthWall1.getY2());
 
-        Segment lengthWall2 = previousWall.getParallel(previousWall.getX1(), previousWall.getY1(), Randomizer.randomFromAverage(AVG_WALL_LENGTH, WALL_LENGTH_RANGE));
+        double length2 = Randomizer.randomAverageMinMax(AVG_WALL_LENGTH, WALL_LENGTH_RANGE, MIN_WALL_LENGTH,
+                Math.min(MAX_WALL_LENGTH, lengthToIntersection2));
+        Segment lengthWall2 = previousWall.getParallel(previousWall.getX1(), previousWall.getY1(), length2);
         Point vertex2 = new Point(lengthWall2.getX2(), lengthWall2.getY2());
 
         Point vertex3 = previousWall.getPointOnSegment(Math.random() * MAX_BORDER_WALL_OFFSET);
@@ -225,9 +267,13 @@ public class Quarter {
         vertexes.add(vertex4);
         vertexes.add(vertex5);
 
-        if (vertexes.stream().anyMatch(Objects::isNull)) return;
+        if (vertexes.stream().anyMatch(Objects::isNull)) {
+            return;
+        }
 
         buildings.add(new Building(vertexes, colour));
+        outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
+        outerVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex2));
     }
 
     private void generateCentralBuilding(Segment wall, Segment previousWall) {
@@ -244,20 +290,48 @@ public class Quarter {
 
         double width = vertex3.distance(vertex4);
 
-        lengthWall = wall.getParallel(wall.getX1(), wall.getY1(), Randomizer.randomFromAverageWithMinMax(width, width * WALL_TO_WALL_RANGE, MIN_WALL_LENGTH, MAX_WALL_LENGTH));
-        Point vertex1 = new Point(lengthWall.getX2(), lengthWall.getY2());
+        Point vertex1;
+        Point vertex2;
 
-        perpendicular = wall.getPerpendicular(lengthWall.getX2(), lengthWall.getY2(), MAX_WALL_LENGTH);
-        Point vertex2 = perpendicular.getIntersection(previousWall);
+        lengthWall = previousWall.getParallel(previousWall.getX1(), previousWall.getY1(),
+                Randomizer.randomAverageMinMax(width, width * WALL_TO_WALL_RANGE, MIN_WALL_LENGTH, MAX_WALL_LENGTH));
+
+        Segment intersectedWall = lengthWall.getIntersectedExtendedSegment(outerVerticalWalls);
+        if (intersectedWall != null) {
+            vertex2 = lengthWall.getIntersection(intersectedWall);
+
+            vertex1 = intersectedWall.getEndPoint();
+            double length = perpendicular.getDistanceToPoint(vertex1);
+            lengthWall = wall.getParallel(wall.getX1(), wall.getY1(), length);
+            Point vertex5 = lengthWall.getEndPoint();
+            vertexes.add(vertex5);
+
+//            Point vertex5 = lengthWall.getIntersection(intersectedWall);
+//            vertexes.add(vertex5);
+//
+//            vertex2 = intersectedWall.getEndPoint();
+//            double length = perpendicular.getDistanceToPoint(vertex2);
+//            lengthWall = wall.getParallel(wall.getX1(), wall.getY1(), length);
+//            vertex1 = lengthWall.getEndPoint();
+
+        } else {
+            vertex2 = new Point(lengthWall.getX2(), lengthWall.getY2());
+            perpendicular = previousWall.getPerpendicular(lengthWall.getX2(), lengthWall.getY2(), -MAX_LENGTH);
+            vertex1 = perpendicular.getIntersection(wall);
+        }
 
         vertexes.add(vertex1);
         vertexes.add(vertex2);
         vertexes.add(vertex3);
         vertexes.add(vertex4);
 
-        if (vertexes.stream().anyMatch(Objects::isNull)) return;
+        if (vertexes.stream().anyMatch(Objects::isNull)) {
+            return;
+        }
 
         buildings.add(new Building(vertexes, colour));
+        outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
+        outerVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex2));
     }
 
     public String getColour() {

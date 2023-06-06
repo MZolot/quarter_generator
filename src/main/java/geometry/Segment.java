@@ -146,6 +146,21 @@ public class Segment {
         return false;
     }
 
+    public boolean intersectsExtended(Segment segment) {
+        if (this.intersects(segment)) {
+            if (this.getStartPoint().equals(segment.getStartPoint()) && this.getEndPoint().equals(segment.getEndPoint())) {
+                return false;
+            }
+            Point intersection = this.getIntersection(segment);
+            if (intersection.equals(this.getStartPoint()) || intersection.equals(this.getEndPoint()) ||
+                    intersection.equals(segment.getStartPoint()) || intersection.equals(segment.getEndPoint())) {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
     public boolean intersectsExtended(List<Segment> segments) {
         for (Segment segment : segments) {
             if (this.intersects(segment)) {
@@ -162,6 +177,38 @@ public class Segment {
 
     public boolean intersectsExtended(Segment[] segments) {
         return this.intersectsExtended(Arrays.stream(segments).toList());
+    }
+
+//    public Segment getIntersectedSegment(List<Segment> segments) {
+//        for (Segment segment : segments) {
+//            if (this.intersects(segment)) {
+//                if (this.equals(segment) ||
+//                        this.equals(segment.getParallel(segment.x1, segment.y1, this.length())) ||
+//                        segment.equals(this.getParallel(this.x1, this.y1, segment.length()))) {
+//                    continue;
+//                }
+//                return segment;
+//            }
+//        }
+//        return null;
+//    }
+
+    public Segment getIntersectedExtendedSegment(List<Segment> segments) {
+        for (Segment segment : segments) {
+            if (this.intersectsExtended(segment)) {
+//                Point intersection = this.getIntersection(segment);
+//                if (intersection.equals(this.getStartPoint()) || intersection.equals(this.getEndPoint()) ||
+//                        intersection.equals(segment.getStartPoint()) || intersection.equals(segment.getEndPoint())) {
+//                    continue;
+//                }
+                return segment;
+            }
+        }
+        return null;
+    }
+
+    public Segment getIntersectedExtendedSegment(Segment[] segments) {
+        return this.getIntersectedExtendedSegment(Arrays.stream(segments).toList());
     }
 
     public Point getIntersection(Segment segment) {

@@ -1,11 +1,7 @@
 package geometry;
 
 import city.Quarter;
-import json.JSONReader;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -106,7 +102,7 @@ public class Polygon {
             Segment nextEdge = borders.get((i + 1) % borders.size());
 
             while (true) {
-                double length = Randomizer.randomFromMinMax(minLength, maxLength);
+                double length = Randomizer.randomMinMax(minLength, maxLength);
                 Segment lengthSegment = edge.getParallel(x, y, length);
                 x = lengthSegment.getX2();
                 y = lengthSegment.getY2();
@@ -115,7 +111,7 @@ public class Polygon {
                 if (!edge.isOnSegment(x, y) || lengthLeft < minLength) {
                     x = edge.getX2();
                     y = edge.getY2();
-                    Segment newEdge = edge.getTiltedPerpendicular(x, y, Randomizer.randomFromMinMax(minLength, maxLength), 0.4, 0.4);
+                    Segment newEdge = edge.getTiltedPerpendicular(x, y, Randomizer.randomMinMax(minLength, maxLength), 0.4, 0.4);
                     if (!newEdge.intersectsExtended(borders) && !newEdge.intersectsExtended(verticalEdges)) {
                         double angle = newEdge.getAngleCos(nextEdge);
                         if (angle > 0.75) {
@@ -127,7 +123,7 @@ public class Polygon {
                 }
 
 
-                Segment newEdge = edge.getTiltedPerpendicular(x, y, Randomizer.randomFromMinMax(MIN_EDGE_LENGTH, MAX_EDGE_LENGTH), 0.4, 0.4);
+                Segment newEdge = edge.getTiltedPerpendicular(x, y, Randomizer.randomMinMax(MIN_EDGE_LENGTH, MAX_EDGE_LENGTH), 0.4, 0.4);
                 if (!newEdge.intersectsExtended(borders) && !newEdge.intersects(verticalEdges)) {
                     verticalEdges.add(newEdge);
                 }

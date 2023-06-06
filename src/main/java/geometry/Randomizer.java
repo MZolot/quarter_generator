@@ -14,16 +14,16 @@ public class Randomizer {
         return nextGaussian;
     }
 
-    public static double randomFromAverage(double average, double range) {
+    public static double randomAverage(double average, double range) {
         return average + nextGaussian() * range;
     }
 
-    public static double randomFromMinMax(double min, double max) {
+    public static double randomMinMax(double min, double max) {
         return min + Math.random() * (max - min);
     }
 
 
-    public static double randomFromAverageWithMinMax(double average, double range, double min, double max) {
+    public static double randomAverageMinMax(double average, double range, double min, double max) {
         return Math.min(Math.max(average + nextGaussian() * range, min), max);
     }
 }

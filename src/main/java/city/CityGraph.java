@@ -40,9 +40,9 @@ public class CityGraph {
 
         List<Quarter> quarters = cityPolygon.getQuarters();
 
-//        BufferedWriter quartersWriter = new BufferedWriter(new FileWriter("src/main/resources/quarters.json"));
-//        quartersWriter.write(quarters.toString().replace("start", "\"start\"").replace("end","\"end\""));
-//        quartersWriter.flush();
+        BufferedWriter quartersWriter = new BufferedWriter(new FileWriter("src/main/resources/quarters.json"));
+        quartersWriter.write(quarters.toString().replace("start", "\"start\"").replace("end","\"end\""));
+        quartersWriter.flush();
 
 //        List<Quarter> quarters = JSONReader.readQuarters("src/main/resources/quarters.json");
 

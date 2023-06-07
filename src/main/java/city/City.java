@@ -1,18 +1,20 @@
 package city;
 
 import geometry.Point;
-import geometry.Polygon;
 import geometry.Randomizer;
 import geometry.Segment;
 import json.JSONSerializer;
 
-import java.io.IOException;
 import java.util.*;
 
-public class CityGraph {
+public class City {
 
-    private Polygon cityPolygon;
     private final JSONSerializer jsonSerializer;
+
+    private Graph cityGraph;
+    private List<Building> allBuildings;
+    private List<Segment> edges;
+    private Set<Point> vertices;
 
     // parameters (configuration)
     private final double MULTIPLIER = 60;
@@ -26,32 +28,24 @@ public class CityGraph {
     private final double BORDER_TILT_PERCENT = 0.05 * MULTIPLIER;
 
 
-    public CityGraph() {
+    public City() {
         jsonSerializer = new JSONSerializer();
+        allBuildings = new ArrayList<>();
     }
 
-    public void generateCity(double startX, double startY, double length, double[][] shapeMultipliers, Map<String, Double> coloringConfig) throws IOException {
-                generateCityGraph(startX, startY, length, shapeMultipliers);
+    public void generateCity(double startX, double startY, double length, double[][] shapeMultipliers, Map<String, Double> coloringConfig) {
+        generateCityGraph(startX, startY, length, shapeMultipliers);
 
-        List<Quarter> quarters = cityPolygon.getQuarters();
-//
-//        BufferedWriter quartersWriter = new BufferedWriter(new FileWriter("src/main/resources/quarters.json"));
-//        quartersWriter.write(quarters.toString().replace("start", "\"start\"").replace("end","\"end\""));
-//        quartersWriter.flush();
-
-//        List<Quarter> quarters = JSONReader.readQuarters("src/main/resources/quarters.json");
-//
+        List<Quarter> quarters = cityGraph.getQuarters();
         colorQuarters(quarters, coloringConfig);
 
-        List<Building> allBuildings = new ArrayList<>();
+        allBuildings = new ArrayList<>();
         for (Quarter quarter : quarters) {
             List<Building> buildings = quarter.fill();
             if (buildings != null) {
-                allBuildings.addAll(buildings.stream().filter(b -> !b.vertices().isEmpty()).toList());
+                allBuildings.addAll(buildings.stream().filter(b -> !b.vertexes().isEmpty()).toList());
             }
         }
-
-        jsonSerializer.serializeBuildings(allBuildings);
     }
 
     private void colorQuarters(List<Quarter> quarters, Map<String, Double> coloringConfig) {
@@ -113,19 +107,17 @@ public class CityGraph {
 //        System.out.println(quarters);
     }
 
-    public void generateCityGraph(double startX, double startY, double length, double[][] shapeMultipliers) throws IOException {
+    private void generateCityGraph(double startX, double startY, double length, double[][] shapeMultipliers) {
         List<Segment> borders = generateShapedBorders(startX, startY, length, shapeMultipliers);
-        cityPolygon = new Polygon(borders);
+        cityGraph = new Graph(borders);
 
-        List<Segment> edges = cityPolygon.fill();
+        edges = cityGraph.fill();
 
-        Set<Point> vertices = new HashSet<>();
+        vertices = new HashSet<>();
         for (Segment edge : edges) {
             vertices.add(edge.getStartPoint());
             vertices.add(edge.getEndPoint());
         }
-
-        jsonSerializer.serializeGraph(edges, vertices);
     }
 
     private List<Segment> generateShapedBorders(double startX, double startY, double length, double[][] shapeMultipliers) {
@@ -206,28 +198,15 @@ public class CityGraph {
         return segments;
     }
 
-    public static void main(String[] args) throws IOException {
-        CityGraph cityGraph = new CityGraph();
-        double[][] squareMultipliers = {{1.0, 0.0}, {0.0, 1.0}, {-1.0, 0.0}, {0.0, -1.0}};
-        double[][] rhombusMultipliers = {{-0.45, -0.9}, {0.45, -0.9}, {0.45, 0.9}, {-0.45, 0.9}};
-        double[][] crossMultipliers = {
-                {0.0, -1.0}, {-1.0, 0.0},
-                {0.0, -1.0}, {1.0, 0},
-                {0.0, -1.0}, {1.0, 0.0},
-                {0.0, 1.0}, {1.0, 0.0},
-                {0.0, 1.0}, {-1.0, 0.0},
-                {0.0, 1.0}, {-1.0, 0.0}};
-
-        Map<String, Double> coloringConfig = new HashMap<>();
-        coloringConfig.put("park", 0.15);
-        coloringConfig.put("poor", 0.3);
-        coloringConfig.put("middle", 0.1);
-        coloringConfig.put("industrial", 0.2);
-        coloringConfig.put("market", 0.1);
-        coloringConfig.put("square", 0.1);
-        coloringConfig.put("rich", 0.05);
-
-        cityGraph.generateCity(80, 80, 300, squareMultipliers, coloringConfig);
+    public List<Building> getBuildings() {
+        return allBuildings;
     }
 
+    public List<Segment> getEdges() {
+        return edges;
+    }
+
+    public Set<Point> getVertices() {
+        return vertices;
+    }
 }

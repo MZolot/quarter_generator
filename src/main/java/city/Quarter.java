@@ -301,6 +301,14 @@ public class Quarter {
         return vertices.stream().filter(v -> !(v == null)).filter(v -> !v.isNan()).toList();
     }
 
+    public boolean isNeighbour(Quarter quarter) {
+        boolean res = false;
+        for (Segment border : this.borders) {
+            res |= Arrays.stream(quarter.getBorders()).anyMatch(s -> s.equals(border));
+        }
+        return res;
+    }
+
     public String getColour() {
         return colour;
     }
@@ -313,12 +321,8 @@ public class Quarter {
         return borders;
     }
 
-    public boolean isNeighbour(Quarter quarter) {
-        boolean res = false;
-        for (Segment border : this.borders) {
-            res |= Arrays.stream(quarter.getBorders()).anyMatch(s -> s.equals(border));
-        }
-        return res;
+    public List<Building> getBuildings() {
+        return buildings;
     }
 
     @Override

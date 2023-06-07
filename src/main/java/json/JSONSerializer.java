@@ -1,6 +1,7 @@
 package json;
 
 import city.Building;
+import city.City;
 import com.google.gson.*;
 import geometry.Point;
 import geometry.Segment;
@@ -40,14 +41,14 @@ public class JSONSerializer {
         }
     }
 
-    public void serializeGraph(Collection<Segment> edges, Collection<Point> vertices) {
+    public void serializeGraph(Collection<Segment> edges, Collection<Point> vertices, String path) {
         try {
-            FileWriter edgesWriter = new FileWriter("graph_edges.json");
+            FileWriter edgesWriter = new FileWriter(path + "graph_edges.json");
             gson.toJson(edges, edgesWriter);
             edgesWriter.flush();
             edgesWriter.close();
 
-            FileWriter verticesWriter = new FileWriter("graph_vertices.json");
+            FileWriter verticesWriter = new FileWriter(path + "graph_vertices.json");
             gson.toJson(vertices, verticesWriter);
             verticesWriter.flush();
             verticesWriter.close();
@@ -56,15 +57,19 @@ public class JSONSerializer {
         }
     }
 
-    public void serializeBuildings(Collection<Building> buildings) {
-
+    public void serializeBuildings(Collection<Building> buildings, String path) {
         try {
-            FileWriter buildingsWriter = new FileWriter("buildings.json");
+            FileWriter buildingsWriter = new FileWriter(path + "buildings.json");
             gson.toJson(buildings, buildingsWriter);
             buildingsWriter.flush();
             buildingsWriter.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void serializeCity(City city, String outputPath) {
+        serializeBuildings(city.getBuildings(), outputPath);
+        serializeGraph(city.getEdges(), city.getVertices(), outputPath);
     }
 }

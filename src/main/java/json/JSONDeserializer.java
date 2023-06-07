@@ -1,5 +1,7 @@
 package json;
 
+import city.City;
+import city.CityConfig;
 import city.Quarter;
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
@@ -50,14 +52,26 @@ public class JSONDeserializer {
         }
     }
 
-    public Quarter deserializeQuarter() {
+    public Quarter deserializeQuarter(String fileName) {
         Quarter quarter;
         try {
-            JsonReader reader = new JsonReader(new FileReader("quarter.json"));
+            JsonReader reader = new JsonReader(new FileReader(fileName));
             quarter = gson.fromJson(reader, Quarter.class);
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
         return quarter;
+    }
+
+    public CityConfig deserializeCityConfig(String fileName) {
+        CityConfig config;
+        try {
+            JsonReader reader = new JsonReader(new FileReader(fileName));
+            config = gson.fromJson(reader, CityConfig.class);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return config;
+
     }
 }

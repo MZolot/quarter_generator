@@ -42,6 +42,14 @@ public class Quarter {
         buildings = new ArrayList<>();
     }
 
+    public Quarter(List<Segment> borders, String color) {
+        this.borders = borders.toArray(new Segment[0]);
+        verticalWalls = new ArrayList<>();
+        outerVerticalWalls = new ArrayList<>();
+        buildings = new ArrayList<>();
+        this.colour = color;
+    }
+
     public List<Building> fill() {
         generateVerticalWalls();
 

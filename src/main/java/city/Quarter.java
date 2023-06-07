@@ -9,6 +9,7 @@ import java.util.*;
 public class Quarter {
 
     private final Segment[] borders;
+    private final int ID;
     private String colour = "poor";
 
     private final List<List<Segment>> verticalWalls;
@@ -28,19 +29,21 @@ public class Quarter {
 
     private final double MAX_LENGTH = 10 * SIZE_MULTIPLIER;
 
-    public Quarter(List<Segment> borders) {
+    public Quarter(List<Segment> borders, int ID) {
         this.borders = borders.toArray(new Segment[0]);
         verticalWalls = new ArrayList<>();
         outerVerticalWalls = new ArrayList<>();
         buildings = new ArrayList<>();
+        this.ID = ID;
     }
 
-    public Quarter(List<Segment> borders, String color) {
+    public Quarter(List<Segment> borders, String color, int ID) {
         this.borders = borders.toArray(new Segment[0]);
         verticalWalls = new ArrayList<>();
         outerVerticalWalls = new ArrayList<>();
         buildings = new ArrayList<>();
         this.colour = color;
+        this.ID = ID;
     }
 
     public List<Building> fill() {
@@ -52,7 +55,7 @@ public class Quarter {
             for (Segment border : borders) {
                 vertices.add(border.getEndPoint());
             }
-            buildings.add(new Building(vertices, colour));
+            buildings.add(new Building(ID, colour, vertices));
             return buildings;
         }
 
@@ -61,7 +64,7 @@ public class Quarter {
             for (Segment border : borders) {
                 vertices.add(border.getEndPoint());
             }
-            buildings.add(new Building(vertices, colour));
+            buildings.add(new Building(ID, colour, vertices));
             return buildings;
         }
 
@@ -164,7 +167,7 @@ public class Quarter {
 
         vertexes = filterVertices(vertexes);
 
-        buildings.add(new Building(vertexes, colour));
+        buildings.add(new Building(ID, colour, vertexes));
         outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
         outerVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex1));
     }
@@ -211,7 +214,7 @@ public class Quarter {
 
         vertexes = filterVertices(vertexes);
 
-        buildings.add(new Building(vertexes, colour));
+        buildings.add(new Building(ID, colour, vertexes));
         outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
         outerVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex2));
     }
@@ -245,7 +248,7 @@ public class Quarter {
 
         vertexes = filterVertices(vertexes);
 
-        buildings.add(new Building(vertexes, colour));
+        buildings.add(new Building(ID, colour, vertexes));
         outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
         outerVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex2));
     }
@@ -292,7 +295,7 @@ public class Quarter {
 
         vertexes = filterVertices(vertexes);
 
-        buildings.add(new Building(vertexes, colour));
+        buildings.add(new Building(ID, colour, vertexes));
         outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
         outerVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex2));
     }

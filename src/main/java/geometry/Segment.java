@@ -41,10 +41,6 @@ public class Segment {
         return new Segment(x, y, newX, newY);
     }
 
-    public Segment getTiltedPerpendicular(double x, double y, double length) {
-        return getTiltedPerpendicular(x, y, length, 0.3, 0.3);
-    }
-
     public Segment getTiltedPerpendicular(double x, double y, double length, double yTiltPercent, double xTiltPercent) {
         double perpendicularX = x - (y2 - y1) / this.length() * length;
         double perpendicularY = y + (x2 - x1) / this.length() * length;
@@ -73,19 +69,15 @@ public class Segment {
         return new Segment(x, y, newX, newY);
     }
 
-    public Segment getTiltedParallel(double x, double y, double length) {
-        return getTiltedParallel(x, y, length, 0.3, 0.3);
-    }
-
-    public Segment getTiltedParallel(double x, double y, double length, double yTiltPercent, double xTiltPercent) {
-        double parallelX = (x2 - (x1 - x) - x) / this.length() * length + x;
-        double parallelY = (y2 - (y1 - y) - y) / this.length() * length + y;
-
-        double newX = parallelX + ((Math.random() - 0.5) * xTiltPercent * 2 * length);
-        double newY = parallelY + ((Math.random() - 0.5) * yTiltPercent * 2 * length);
-
-        return new Segment(x, y, newX, newY);
-    }
+//    public Segment getTiltedParallel(double x, double y, double length, double yTiltPercent, double xTiltPercent) {
+//        double parallelX = (x2 - (x1 - x) - x) / this.length() * length + x;
+//        double parallelY = (y2 - (y1 - y) - y) / this.length() * length + y;
+//
+//        double newX = parallelX + ((Math.random() - 0.5) * xTiltPercent * 2 * length);
+//        double newY = parallelY + ((Math.random() - 0.5) * yTiltPercent * 2 * length);
+//
+//        return new Segment(x, y, newX, newY);
+//    }
 
     public Segment getNormal() {
         return this.getParallel(0, 0, 1);
@@ -103,15 +95,6 @@ public class Segment {
         return getIntersection(segment) != null;
     }
 
-    public boolean intersects(Segment[] segments) {
-        for (Segment segment : segments) {
-            if (this.intersects(segment)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public boolean intersects(List<Segment> segments) {
         for (Segment segment : segments) {
             if (this.intersects(segment)) {
@@ -123,12 +106,12 @@ public class Segment {
 
     public boolean intersectsExtended(Segment segment) {
         if (this.intersects(segment)) {
-            if (this.getStartPoint().equals(segment.getStartPoint()) && this.getEndPoint().equals(segment.getEndPoint())) {
+            if (this.isStartPoint(segment.getStartPoint()) && this.isEndPoint(segment.getEndPoint())) {
                 return false;
             }
             Point intersection = this.getIntersection(segment);
-            return !intersection.equals(this.getStartPoint()) && !intersection.equals(this.getEndPoint()) &&
-                    !intersection.equals(segment.getStartPoint()) && !intersection.equals(segment.getEndPoint());
+            return  !this.isStartPoint(intersection) && !this.isEndPoint(intersection) &&
+                    !segment.isStartPoint(intersection) && !segment.isEndPoint(intersection);
         }
         return false;
     }
@@ -137,8 +120,8 @@ public class Segment {
         for (Segment segment : segments) {
             if (this.intersects(segment)) {
                 Point intersection = this.getIntersection(segment);
-                if (intersection.equals(this.getStartPoint()) || intersection.equals(this.getEndPoint()) ||
-                        intersection.equals(segment.getStartPoint()) || intersection.equals(segment.getEndPoint())) {
+                if (this.isStartPoint(intersection) || this.isEndPoint(intersection) ||
+                        segment.isStartPoint(intersection) || segment.isStartPoint(intersection)) {
                     continue;
                 }
                 return true;
@@ -158,10 +141,6 @@ public class Segment {
             }
         }
         return null;
-    }
-
-    public Segment getIntersectedExtendedSegment(Segment[] segments) {
-        return this.getIntersectedExtendedSegment(Arrays.stream(segments).toList());
     }
 
     public Point getIntersection(Segment segment) {

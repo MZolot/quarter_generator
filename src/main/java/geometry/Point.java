@@ -20,17 +20,6 @@ public class Point {
         return Math.sqrt(Math.pow((x - point.x), 2) + Math.pow((y - point.y), 2));
     }
 
-    public Point round() {
-        double newX = x - (x % 0.001);
-        double newY = y - (y % 0.001);
-        return new Point(newX, newY);
-    }
-
-    public void roundThis() {
-        x = x - (x % 0.001);
-        y = y - (y % 0.001);
-    }
-
     public boolean isNan() {
         return x.isNaN() || y.isNaN();
     }

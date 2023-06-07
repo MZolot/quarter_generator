@@ -1,91 +1,24 @@
-package geometry;
+package city;
 
-import city.Quarter;
+import geometry.Point;
+import geometry.Randomizer;
+import geometry.Segment;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Polygon {
-    private final List<Point> vertices;
+public class Graph {
     private final List<Segment> edges;
 
     private final double MULTIPLIER = 60;
     private final double MIN_EDGE_LENGTH = 0.7 * MULTIPLIER;
     private final double MAX_EDGE_LENGTH = 1.3 * MULTIPLIER;
-//    private final double EDGE_LENGTH_RANGE = (MAX_EDGE_LENGTH - MIN_EDGE_LENGTH) / 2;
-//    private final double AVG_EDGE_LENGTH = (MAX_EDGE_LENGTH + EDGE_LENGTH_RANGE) / 2;
 
     private List<Segment> innerEdges;
-    private List<Segment> verticalEdges;
     private List<Quarter> quarters;
 
-    public Polygon(List<Point> vertices, boolean useVertices) {
-        this.vertices = vertices;
-        edges = new ArrayList<>();
-        for (int i = 0; i < vertices.size(); i++) {
-            edges.add(new Segment(vertices.get(i), vertices.get((i + 1) % vertices.size())));
-        }
-    }
-
-    public Polygon(List<Segment> edges) {
+    public Graph(List<Segment> edges) {
         this.edges = edges;
-        vertices = new ArrayList<>();
-        for (Segment edge : edges) {
-            vertices.add(edge.getStartPoint());
-        }
-    }
-
-    public List<Point> getVertices() {
-        return vertices;
-    }
-
-    private int findClosestEdgeIndex(Point point) {
-        int minDistanceEdgeIndex = 0;
-        double minDistance = 10000;
-        for (int i = 0; i < edges.size(); i++) {
-            double distance = edges.get(i).getDistanceToPoint(point);
-            if (distance < minDistance) {
-                minDistance = distance;
-                minDistanceEdgeIndex = i;
-            }
-        }
-        return minDistanceEdgeIndex;
-    }
-
-    private boolean isInsideByNormal(Point point, Segment previousEdge, Segment edge, Segment nextEdge) {
-        double pointX = point.x;
-        double pointY = point.y;
-        double distance1 = Math.sqrt(Math.pow((edge.getX1() - pointX), 2) + Math.pow((edge.getY1() - pointY), 2));
-        double distance2 = Math.sqrt(Math.pow((edge.getX2() - pointX), 2) + Math.pow((edge.getY2() - pointY), 2));
-
-        double distance = Math.max(distance1, distance2);
-
-        Segment vectorToPoint;
-        Segment normalToPoint;
-
-        Segment perpendicular = edge.getPerpendicular(pointX, pointY, distance);
-        if (edge.intersects(perpendicular)) {
-            Point intersection = edge.getIntersection(perpendicular);
-            vectorToPoint = new Segment(pointX, pointY, intersection.x, intersection.y);
-            normalToPoint = edge.getPerpendicular(intersection.x, intersection.y, -distance);
-        } else {
-            perpendicular = edge.getPerpendicular(pointX, pointY, -distance);
-            if (edge.intersects(perpendicular)) {
-                Point intersection = edge.getIntersection(perpendicular);
-                vectorToPoint = new Segment(pointX, pointY, intersection.x, intersection.y);
-                normalToPoint = edge.getPerpendicular(intersection.x, intersection.y, -distance);
-            } else {
-                if (distance1 < distance2) {
-                    vectorToPoint = new Segment(pointX, pointY, edge.getX1(), edge.getY1());
-                    normalToPoint = edge.getAverageSegment(previousEdge.getReversed()).getTurnedAround();
-                } else {
-                    vectorToPoint = new Segment(pointX, pointY, edge.getX2(), edge.getY2());
-                    normalToPoint = edge.getReversed().getAverageSegment(nextEdge).getTurnedAround();
-                }
-            }
-        }
-
-        return vectorToPoint.getAngleCos(normalToPoint) > 0;
     }
 
     private List<Segment> generateVerticalEdges(List<Segment> borders, double maxLengthMultiplier, double minLengthMultiplier) {
@@ -122,8 +55,7 @@ public class Polygon {
                     break;
                 }
 
-
-                Segment newEdge = edge.getTiltedPerpendicular(x, y, Randomizer.randomMinMax(MIN_EDGE_LENGTH, MAX_EDGE_LENGTH), 0.4, 0.4);
+                Segment newEdge = edge.getTiltedPerpendicular(x, y, Randomizer.randomMinMax(minLength, maxLength), 0.4, 0.4);
                 if (!newEdge.intersectsExtended(borders) && !newEdge.intersects(verticalEdges)) {
                     verticalEdges.add(newEdge);
                 }
@@ -138,12 +70,6 @@ public class Polygon {
         for (int i = 0; i < size; i++) {
             Segment firstEdge = verticalEdges.get(i);
             int secondEdgeIndex = (verticalEdges.size() + i - 1) % verticalEdges.size();
-
-//            if (i == 0) {
-//                secondEdgeIndex = verticalEdges.size() - 1;
-//            } else {
-//                secondEdgeIndex = i - 1;
-//            }
             Segment secondEdge = verticalEdges.get(secondEdgeIndex);
 
             Point newEdgeEnd = firstEdge.getEndPoint();
@@ -155,19 +81,6 @@ public class Polygon {
 
             if (newEdge.intersectsExtended(verticalEdges) || newEdge.intersects(innerEdges) ||
                     firstEdgeCos > 0.75 || secondEdgeCos > 0.75) { // добавить проверку на угол с соседним вертикальным ребром?
-//                if (secondEdge.length() != 0) {
-//                    secondEdge.setEndPoint(secondEdge.getStartPoint());
-//                    if (i == 0) {
-//                        i--;
-//                        continue;
-//                    }
-////                    if (i > 0) {
-////                        i -= 2;
-////                    } else if (i > 0) {
-////                        i--;
-////                    }
-//                    continue;
-//                }
                 verticalEdges.remove(secondEdgeIndex);
                 if (!horizontalEdges.isEmpty()) {
                     horizontalEdges.remove(horizontalEdges.size() - 1);
@@ -186,16 +99,6 @@ public class Polygon {
                 }
                 continue;
             }
-
-//            if (newEdge.intersectsExtended(verticalEdges) || newEdge.intersects(innerEdges) ||
-//                    firstEdgeCos > 0.75 || secondEdgeCos > 0.75) {
-//                verticalEdges.remove(secondEdgeIndex);
-//                horizontalEdges.remove(horizontalEdges.size() - 1);
-//                quarters.remove(quarters.size() - 1);
-//                if (i != 0) i -= 2;
-//                size--;
-//                continue;
-//            }
 
             horizontalEdges.add(newEdge);
 
@@ -247,24 +150,14 @@ public class Polygon {
         quarters.add(new Quarter(quarterBorders));
     }
 
-    public boolean isInsidePolygon(Point point) {
-        int minDistanceEdgeIndex = this.findClosestEdgeIndex(point);
-        int previousIndex = (minDistanceEdgeIndex + edges.size() - 1) % edges.size();
-        int nextIndex = (minDistanceEdgeIndex + 1) % edges.size();
-        return isInsideByNormal(point, edges.get(previousIndex), edges.get(minDistanceEdgeIndex), edges.get(nextIndex));
-    }
-
     public List<Segment> fill() {
         quarters = new ArrayList<>();
         innerEdges = new ArrayList<>(edges);
 
-//        innerEdges = JSONReader.readSegments("src/main/resources/b.json");
-
         double maxLengthMultiplier = 1;
         double minLengthMultiplier = 1;
 
-        verticalEdges = generateVerticalEdges(edges, maxLengthMultiplier, minLengthMultiplier);
-        //verticalEdges = JSONReader.readSegments("src/main/resources/i.json");
+        List<Segment> verticalEdges = generateVerticalEdges(edges, maxLengthMultiplier, minLengthMultiplier);
 
         List<Segment> horizontalEdges = new ArrayList<>(edges);
         List<Segment> innerPolygon = new ArrayList<>(edges);

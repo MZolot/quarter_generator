@@ -19,7 +19,7 @@ public class Quarter {
     private final double SIZE_MULTIPLIER = 30;
 
     private final double MIN_WALL_LENGTH = 0.4 * SIZE_MULTIPLIER;
-    private final double MAX_WALL_LENGTH = 0.75 * SIZE_MULTIPLIER;
+    private final double MAX_WALL_LENGTH = 0.7 * SIZE_MULTIPLIER;
     private final double WALL_LENGTH_RANGE = (MAX_WALL_LENGTH - MIN_WALL_LENGTH) / 2;
     private final double AVG_WALL_LENGTH = MAX_WALL_LENGTH - WALL_LENGTH_RANGE;
     private final double WALL_TO_WALL_RANGE = 0.55;
@@ -27,13 +27,6 @@ public class Quarter {
     private final double MAX_BORDER_WALL_OFFSET = 0.01 * SIZE_MULTIPLIER;
 
     private final double MAX_LENGTH = 10 * SIZE_MULTIPLIER;
-
-    public Quarter(Segment[] borders) {
-        this.borders = borders;
-        verticalWalls = new ArrayList<>();
-        outerVerticalWalls = new ArrayList<>();
-        buildings = new ArrayList<>();
-    }
 
     public Quarter(List<Segment> borders) {
         this.borders = borders.toArray(new Segment[0]);
@@ -153,7 +146,7 @@ public class Quarter {
         }
         Segment lengthWall1 = new Segment(wall.getX1(), wall.getY1(), vertex1.x, vertex1.y);
         Segment lengthWall2 = new Segment(previousWall.getX1(), previousWall.getY1(), vertex1.x, vertex1.y);
-        if (lengthWall1.length() > MAX_WALL_LENGTH || lengthWall2.length() > MAX_WALL_LENGTH) {
+        if (lengthWall1.length() > MAX_WALL_LENGTH * 1.1 || lengthWall2.length() > MAX_WALL_LENGTH * 1.1) {
             generateCornerPentagon(wall, previousWall, lengthWall1.length(), lengthWall2.length());
             return;
         }
@@ -169,11 +162,11 @@ public class Quarter {
         vertexes.add(vertex3);
         vertexes.add(vertex4);
 
-        vertexes = vertexes.stream().filter(v -> !v.isNan()).toList();
+        vertexes = filterVertices(vertexes);
 
         buildings.add(new Building(vertexes, colour));
-        outerVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex1));
         outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
+        outerVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex1));
     }
 
     private void generateCornerNotRectangular(Segment wall, Segment previousWall) {
@@ -216,7 +209,7 @@ public class Quarter {
         vertexes.add(vertex3);
         vertexes.add(vertex4);
 
-        vertexes = vertexes.stream().filter(v -> !v.isNan()).toList();
+        vertexes = filterVertices(vertexes);
 
         buildings.add(new Building(vertexes, colour));
         outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
@@ -250,7 +243,7 @@ public class Quarter {
         vertexes.add(vertex4);
         vertexes.add(vertex5);
 
-        vertexes = vertexes.stream().filter(v -> !v.isNan()).toList();
+        vertexes = filterVertices(vertexes);
 
         buildings.add(new Building(vertexes, colour));
         outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
@@ -297,11 +290,15 @@ public class Quarter {
         vertexes.add(vertex3);
         vertexes.add(vertex4);
 
-        vertexes = vertexes.stream().filter(v -> !v.isNan()).toList();
+        vertexes = filterVertices(vertexes);
 
         buildings.add(new Building(vertexes, colour));
         outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
         outerVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex2));
+    }
+
+    private List<Point> filterVertices(List<Point> vertices) {
+        return vertices.stream().filter(v -> !(v == null)).filter(v -> !v.isNan()).toList();
     }
 
     public String getColour() {

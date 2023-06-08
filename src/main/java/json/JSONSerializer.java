@@ -10,6 +10,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.List;
 
 public class JSONSerializer {
 
@@ -57,7 +58,17 @@ public class JSONSerializer {
         }
     }
 
-    public void serializeBuildings(Collection<Building> buildings, String path) {
+    public void serializeBuildings(List<Building> buildings, String path) {
+        try {
+            FileWriter buildingsWriter = new FileWriter(path + "buildings.json");
+            gson.toJson(buildings, buildingsWriter);
+            buildingsWriter.flush();
+            buildingsWriter.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public void serializeBuildingsList(List<List<Building>> buildings, String path) {
         try {
             FileWriter buildingsWriter = new FileWriter(path + "buildings.json");
             gson.toJson(buildings, buildingsWriter);
@@ -69,7 +80,7 @@ public class JSONSerializer {
     }
 
     public void serializeCity(City city, String outputPath) {
-        serializeBuildings(city.getBuildings(), outputPath);
+        serializeBuildingsList(city.getBuildings(), outputPath);
         serializeGraph(city.getEdges(), city.getVertices(), outputPath);
     }
 }

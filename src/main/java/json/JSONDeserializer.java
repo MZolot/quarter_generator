@@ -1,6 +1,5 @@
 package json;
 
-import city.City;
 import city.CityConfig;
 import city.Quarter;
 import com.google.gson.*;
@@ -31,13 +30,12 @@ public class JSONDeserializer {
         {
             JsonObject jsonObject = json.getAsJsonObject();
             String color = jsonObject.get("color").getAsString();
-            int id = jsonObject.get("id").getAsInt();
             JsonArray jsonBorders = jsonObject.getAsJsonArray("borders");
             List<Segment> borders = new ArrayList<>();
             for (JsonElement jsonBorder : jsonBorders) {
                 borders.add(context.deserialize(jsonBorder, Segment.class));
             }
-            return new Quarter(borders, color, id);
+            return new Quarter(borders, color);
         }
     }
 

@@ -94,7 +94,7 @@ public class Graph {
                 size--;
                 if (size == 1) {
                     verticalEdges.remove(0);
-                    quarters.add(new Quarter(horizontalEdges, quarters.size()));
+                    quarters.add(new Quarter(horizontalEdges));
                     break;
                 }
                 continue;
@@ -147,7 +147,7 @@ public class Graph {
             quarterBorders.add(new Segment(innerBorders.get(firstEdgeBaseIndex).getStartPoint(), quarterVertices.get(0)));
         }
 
-        quarters.add(new Quarter(quarterBorders, quarters.size()));
+        quarters.add(new Quarter(quarterBorders));
     }
 
     public List<Segment> fill() {
@@ -176,7 +176,7 @@ public class Graph {
             verticalEdges = generateVerticalEdges(horizontalEdges, maxLengthMultiplier, minLengthMultiplier);
         }
         innerEdges.addAll(verticalEdges);
-        quarters.add(new Quarter(innerPolygon, quarters.size()));
+        quarters.add(new Quarter(innerPolygon));
 
         return innerEdges;
     }

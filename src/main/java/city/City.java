@@ -3,16 +3,13 @@ package city;
 import geometry.Point;
 import geometry.Randomizer;
 import geometry.Segment;
-import json.JSONSerializer;
 
 import java.util.*;
 
 public class City {
 
-    private final JSONSerializer jsonSerializer;
-
     private Graph cityGraph;
-    private List<Building> allBuildings;
+    private List<List<Building>> allBuildings;
     private List<Segment> edges;
     private Set<Point> vertices;
 
@@ -29,7 +26,6 @@ public class City {
 
 
     public City() {
-        jsonSerializer = new JSONSerializer();
         allBuildings = new ArrayList<>();
     }
 
@@ -43,7 +39,7 @@ public class City {
         for (Quarter quarter : quarters) {
             List<Building> buildings = quarter.fill();
             if (buildings != null) {
-                allBuildings.addAll(buildings.stream().filter(b -> !b.vertexes().isEmpty()).toList());
+                allBuildings.add(buildings.stream().filter(b -> !b.vertexes().isEmpty()).toList());
             }
         }
     }
@@ -198,7 +194,7 @@ public class City {
         return segments;
     }
 
-    public List<Building> getBuildings() {
+    public List<List<Building>> getBuildings() {
         return allBuildings;
     }
 

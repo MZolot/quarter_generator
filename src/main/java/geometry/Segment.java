@@ -117,6 +117,9 @@ public class Segment {
     }
 
     public boolean intersectsExtended(List<Segment> segments) {
+        if (segments == null) {
+            return false;
+        }
         for (Segment segment : segments) {
             if (this.intersects(segment)) {
                 Point intersection = this.getIntersection(segment);
@@ -135,6 +138,9 @@ public class Segment {
     }
 
     public Segment getIntersectedExtendedSegment(List<Segment> segments) {
+        if (segments == null) {
+            return null;
+        }
         for (Segment segment : segments) {
             if (this.intersectsExtended(segment)) {
                 return segment;

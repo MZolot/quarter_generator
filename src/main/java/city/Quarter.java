@@ -13,34 +13,30 @@ public class Quarter {
     private String colour = "poor";
 
     private final List<List<Segment>> verticalWalls;
-    private final List<Segment> outerVerticalWalls;
+    private final List<Segment> buildingsVerticalWalls;
     private final List<Building> buildings;
 
     // parameters (configuration)
     private final double SIZE_MULTIPLIER = 30;
 
-    private final double MIN_WALL_LENGTH = 0.4 * SIZE_MULTIPLIER;
+    private final double MIN_WALL_LENGTH = 0.45 * SIZE_MULTIPLIER;
     private final double MAX_WALL_LENGTH = 0.7 * SIZE_MULTIPLIER;
     private final double WALL_LENGTH_RANGE = (MAX_WALL_LENGTH - MIN_WALL_LENGTH) / 2;
     private final double AVG_WALL_LENGTH = MAX_WALL_LENGTH - WALL_LENGTH_RANGE;
-    private final double WALL_TO_WALL_RANGE = 0.55;
+    private final double WALL_TO_WALL_RANGE = 0.4;
 
     private final double MAX_BORDER_WALL_OFFSET = 0.01 * SIZE_MULTIPLIER;
 
     private final double MAX_LENGTH = 10 * SIZE_MULTIPLIER;
 
     public Quarter(List<Segment> borders, int ID) {
-        this.borders = borders.toArray(new Segment[0]);
-        verticalWalls = new ArrayList<>();
-        outerVerticalWalls = new ArrayList<>();
-        buildings = new ArrayList<>();
-        this.ID = ID;
+        this(borders, "poor", ID);
     }
 
     public Quarter(List<Segment> borders, String color, int ID) {
         this.borders = borders.toArray(new Segment[0]);
         verticalWalls = new ArrayList<>();
-        outerVerticalWalls = new ArrayList<>();
+        buildingsVerticalWalls = new ArrayList<>();
         buildings = new ArrayList<>();
         this.colour = color;
         this.ID = ID;
@@ -127,12 +123,9 @@ public class Quarter {
                     if (k == i) return;
                     previousWall = previousBorderWalls.get(previousBorderWalls.size() - 1);
                     generateCornerBuilding(wall, previousWall);
-                } else if (j == borderWalls.size() - 1) {
-                    previousWall = borderWalls.get(j - 1);
-                    generateCornerNotRectangular(wall, previousWall);
                 } else {
                     previousWall = borderWalls.get(j - 1);
-                    generateCentralBuilding(wall, previousWall);
+                    generateDefaultBuilding(wall, previousWall);
                 }
             }
         }
@@ -144,14 +137,32 @@ public class Quarter {
 
         Point vertex1 = wall.getIntersection(previousWall);
         if (vertex1 == null) {
-            generateCornerNotRectangular(wall, previousWall);
+            generateDefaultBuilding(wall, previousWall);
             return;
         }
-        Segment lengthWall1 = new Segment(wall.getX1(), wall.getY1(), vertex1.x, vertex1.y);
-        Segment lengthWall2 = new Segment(previousWall.getX1(), previousWall.getY1(), vertex1.x, vertex1.y);
-        if (lengthWall1.length() > MAX_WALL_LENGTH * 1.1 || lengthWall2.length() > MAX_WALL_LENGTH * 1.1) {
-            generateCornerPentagon(wall, previousWall, lengthWall1.length(), lengthWall2.length());
+        Segment lengthWallThis = new Segment(wall.getX1(), wall.getY1(), vertex1.x, vertex1.y);
+        Segment lengthWallPrevious = new Segment(previousWall.getX1(), previousWall.getY1(), vertex1.x, vertex1.y);
+        if (lengthWallThis.length() > MAX_WALL_LENGTH * 1.1 || lengthWallPrevious.length() > MAX_WALL_LENGTH * 1.1) {
+            generateCornerPentagon(wall, previousWall, lengthWallThis.length(), lengthWallPrevious.length());
             return;
+        }
+
+        if (!buildingsVerticalWalls.isEmpty()) {
+            Segment previousBuildingWall = buildingsVerticalWalls.get(buildingsVerticalWalls.size() - 1);
+            if (previousBuildingWall.isStartPoint(previousWall.getStartPoint())) {
+                double diff = previousBuildingWall.length() - lengthWallPrevious.length();
+                if (diff > 0 && diff < MIN_WALL_LENGTH * 0.7) {
+                    vertex1 = previousBuildingWall.getEndPoint();
+                    Segment borderParallel = wall.getPerpendicular(wall.getX1(), wall.getY1(), -MAX_LENGTH);
+                    Segment wallParallel = wall.getParallel(vertex1.x, vertex1.y, -MAX_LENGTH);
+                    Point intersection = borderParallel.getIntersection(wallParallel);
+                    if (intersection == null) {
+                        System.out.println("AAAAAA");
+                        return;
+                    }
+                    wall = wall.getParallel(intersection.x, intersection.y);
+                }
+            }
         }
 
         Point vertex2 = previousWall.getPointOnSegment(Math.random() * (MAX_BORDER_WALL_OFFSET));
@@ -168,11 +179,11 @@ public class Quarter {
         vertexes = filterVertices(vertexes);
 
         buildings.add(new Building(ID, colour, vertexes));
-        outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
-        outerVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex1));
+        buildingsVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex1));
+        buildingsVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
     }
 
-    private void generateCornerNotRectangular(Segment wall, Segment previousWall) {
+    private void generateDefaultBuilding(Segment wall, Segment previousWall) {
         Segment lengthWall;
 
         double offset = Math.random() * MAX_BORDER_WALL_OFFSET;
@@ -192,19 +203,33 @@ public class Quarter {
         Point vertex2;
 
         lengthWall = previousWall.getParallel(previousWall.getX1(), previousWall.getY1(), wallLength);
-
-        Segment intersectedWall = lengthWall.getIntersectedExtendedSegment(outerVerticalWalls);
+        Segment intersectedWall = lengthWall.getIntersectedExtendedSegment(buildingsVerticalWalls);
         if (intersectedWall != null && !Double.isNaN(lengthWall.getIntersection(intersectedWall).x)) {
             vertex2 = lengthWall.getIntersection(intersectedWall);
 
             vertex1 = intersectedWall.getEndPoint();
             double length = offsetWall.getDistanceToPoint(vertex1);
             lengthWall = wall.getParallel(wall.getX1(), wall.getY1(), length);
+
             Point vertex5 = lengthWall.getEndPoint();
             vertexes.add(vertex5);
         } else {
-            vertex2 = new Point(lengthWall.getX2(), lengthWall.getY2());
-            vertex1 = wall.getParallel(wall.getX1(), wall.getY1(), wallLength).getEndPoint();
+            lengthWall = wall.getParallel(wall.getX1(), wall.getY1(), wallLength);
+            intersectedWall = lengthWall.getIntersectedExtendedSegment(buildingsVerticalWalls);
+            if (intersectedWall != null && !Double.isNaN(lengthWall.getIntersection(intersectedWall).x)) {
+                Point vertex5 = lengthWall.getIntersection(intersectedWall);
+
+                vertex2 = intersectedWall.getEndPoint();
+                double length = offsetWall.getDistanceToPoint(vertex2);
+                lengthWall = wall.getParallel(wall.getX1(), wall.getY1(), length);
+
+                vertex1 = lengthWall.getEndPoint();
+                vertexes.add(vertex5);
+            } else {
+                lengthWall = previousWall.getParallel(previousWall.getX1(), previousWall.getY1(), wallLength);
+                vertex2 = new Point(lengthWall.getX2(), lengthWall.getY2());
+                vertex1 = wall.getParallel(wall.getX1(), wall.getY1(), wallLength).getEndPoint();
+            }
         }
 
         vertexes.add(vertex1);
@@ -215,8 +240,8 @@ public class Quarter {
         vertexes = filterVertices(vertexes);
 
         buildings.add(new Building(ID, colour, vertexes));
-        outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
-        outerVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex2));
+        buildingsVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex2));
+        buildingsVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
     }
 
     private void generateCornerPentagon(Segment wall, Segment previousWall, double lengthToIntersection1, double lengthToIntersection2) {
@@ -249,55 +274,8 @@ public class Quarter {
         vertexes = filterVertices(vertexes);
 
         buildings.add(new Building(ID, colour, vertexes));
-        outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
-        outerVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex2));
-    }
-
-    private void generateCentralBuilding(Segment wall, Segment previousWall) {
-        List<Point> vertexes = new ArrayList<>();
-
-        Segment lengthWall;
-        Segment perpendicular;
-
-        lengthWall = wall.getParallel(wall.getX1(), wall.getY1(), Math.random() * MAX_BORDER_WALL_OFFSET);
-        Point vertex4 = new Point(lengthWall.getX2(), lengthWall.getY2());
-
-        perpendicular = lengthWall.getPerpendicular(lengthWall.getX2(), lengthWall.getY2(), MAX_LENGTH);
-        Point vertex3 = perpendicular.getIntersection(previousWall);
-
-        double width = vertex3.distance(vertex4);
-
-        Point vertex1;
-        Point vertex2;
-
-        lengthWall = previousWall.getParallel(previousWall.getX1(), previousWall.getY1(),
-                Randomizer.randomAverageMinMax(width, width * WALL_TO_WALL_RANGE, MIN_WALL_LENGTH, MAX_WALL_LENGTH));
-
-        Segment intersectedWall = lengthWall.getIntersectedExtendedSegment(outerVerticalWalls);
-        if (intersectedWall != null) {
-            vertex2 = lengthWall.getIntersection(intersectedWall);
-
-            vertex1 = intersectedWall.getEndPoint();
-            double length = perpendicular.getDistanceToPoint(vertex1);
-            lengthWall = wall.getParallel(wall.getX1(), wall.getY1(), length);
-            Point vertex5 = lengthWall.getEndPoint();
-            vertexes.add(vertex5);
-        } else {
-            vertex2 = new Point(lengthWall.getX2(), lengthWall.getY2());
-            perpendicular = previousWall.getPerpendicular(lengthWall.getX2(), lengthWall.getY2(), -MAX_LENGTH);
-            vertex1 = perpendicular.getIntersection(wall);
-        }
-
-        vertexes.add(vertex1);
-        vertexes.add(vertex2);
-        vertexes.add(vertex3);
-        vertexes.add(vertex4);
-
-        vertexes = filterVertices(vertexes);
-
-        buildings.add(new Building(ID, colour, vertexes));
-        outerVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
-        outerVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex2));
+        buildingsVerticalWalls.add(new Segment(previousWall.getStartPoint(), vertex2));
+        buildingsVerticalWalls.add(new Segment(wall.getStartPoint(), vertex1));
     }
 
     private List<Point> filterVertices(List<Point> vertices) {

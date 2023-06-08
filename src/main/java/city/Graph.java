@@ -11,8 +11,8 @@ public class Graph {
     private final List<Segment> edges;
 
     private final double MULTIPLIER = 60;
-    private final double MIN_EDGE_LENGTH = 0.7 * MULTIPLIER;
-    private final double MAX_EDGE_LENGTH = 1.3 * MULTIPLIER;
+    private final double MIN_EDGE_LENGTH = 0.8 * MULTIPLIER;
+    private final double MAX_EDGE_LENGTH = 1.5 * MULTIPLIER;
 
     private List<Segment> innerEdges;
     private List<Quarter> quarters;
@@ -80,7 +80,7 @@ public class Graph {
             double secondEdgeCos = secondEdge.getAngleCos(newEdge.getReversed());
 
             if (newEdge.intersectsExtended(verticalEdges) || newEdge.intersects(innerEdges) ||
-                    firstEdgeCos > 0.75 || secondEdgeCos > 0.75) { // добавить проверку на угол с соседним вертикальным ребром?
+                    firstEdgeCos > 0.65 || secondEdgeCos > 0.65) { // добавить проверку на угол с соседним вертикальным ребром?
                 verticalEdges.remove(secondEdgeIndex);
                 if (!horizontalEdges.isEmpty()) {
                     horizontalEdges.remove(horizontalEdges.size() - 1);
